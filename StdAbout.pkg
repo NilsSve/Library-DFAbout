@@ -131,6 +131,7 @@ Procedure DoAbout String sTitle String sVersion String sCopyRight String sAuthor
             End
             Else If (iArgs > 5 and sAuthor <> "") Begin
                 Send Add_LineLn sAuthor
+                Send Add_LineLn ""
             End
         End
     
@@ -162,7 +163,7 @@ Procedure DoAbout String sTitle String sVersion String sCopyRight String sAuthor
         End
 
         If (iArgs = 9 and sParam9  <> "") Begin
-            Send Add_Line sParam9
+            Send Add_LineLn sParam9
         End
         Else If (iArgs > 9 and sParam9  <> "") Begin
             Send Add_LineLn sParam9

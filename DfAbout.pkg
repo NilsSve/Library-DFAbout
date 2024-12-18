@@ -13,8 +13,93 @@ Use DFBTRDRV.PKG
 Use MSSqldrv.pkg
 Use db2_drv.pkg
 Use odbc_drv.pkg
-Use WsGlobalFunctions.pkg
+#IF (!@ > 210)
+    Use WsGlobalFunctions.pkg
+#ELSE
+    Use GlobalFunctionsProcedures.pkg
+    Use seq_chnl.pkg
+
+    // A variant of the ShellExecute Win API, but it waits until the process that is started
+    // (the passed program), has finished
+    // The DOS box does also _not_ flash briefly.
+    Procedure RunProgramWait Global String sProgram String sParameter
+//        Handle hProcess
+//        Integer iVoid
+//        AboutSHELLEXECUTEINFO sInfo
+//    
+//        Move (SizeOfType(AboutSHELLEXECUTEINFO)) to sInfo.cbSize
+//    
+//        Move SEE_MASK_NOCLOSEPROCESS to sInfo.fMask
+//        Move SW_SHOW                 to sInfo.nShow
+//    
+//        Move (AddressOf(sProgram))   to sInfo.lpFile
+//        Move (AddressOf(sParameter)) to sInfo.lpParameters
+//        // This will "hide" the DOS box from showing (no flasing box):
+//        Move 0                       to sInfo.nShow
+//    
+//        Move (AboutShellExecuteEx(AddressOf(sInfo))) to iVoid
+//        Move sInfo.hProcess to hProcess
+//        If (hProcess) Begin
+//            Move (AboutWaitForSingleObject(hProcess, -1)) to iVoid
+//            Move (AboutCloseHandle(hProcess)) to iVoid
+//        End
+    End_Procedure
+
+    Function OpenOutput Global String sFileName Returns Integer
+        Integer iCh
+    
+        Get Seq_New_Channel to iCh
+        If (iCh = DF_SEQ_CHANNEL_NOT_AVAILABLE) Begin
+            Error DFERR_PROGRAM "DF_SEQ_CHANNEL_NOT_AVAILABLE"
+            Function_Return DF_SEQ_CHANNEL_NOT_AVAILABLE
+        End
+        Direct_Output channel iCh sFileName
+        Function_Return iCh
+    End_Function
+    
+    Procedure CloseOutput Global Integer iCh
+        Close_Output channel iCh
+        Send Seq_Release_Channel iCh
+    End_Procedure
+    
+    Function OpenInput Global String sFileName Returns Integer
+        Integer iCh
+    
+        Get Seq_New_Channel to iCh
+        If (iCh = DF_SEQ_CHANNEL_NOT_AVAILABLE) Begin
+            Error DFERR_PROGRAM "DF_SEQ_CHANNEL_NOT_AVAILABLE"
+            Function_Return DF_SEQ_CHANNEL_NOT_AVAILABLE
+        End
+        Direct_Input channel iCh sFileName
+        Function_Return iCh
+    End_Function
+    
+    Procedure CloseInput Global Integer iCh
+        Close_Input channel iCh
+        Send Seq_Release_Channel iCh
+    End_Procedure
+    
+    Function OpenAppendOutput Global String sFileName Returns Integer
+        Integer iCh
+    
+        Get Seq_New_Channel to iCh
+        If (iCh = DF_SEQ_CHANNEL_NOT_AVAILABLE) Begin
+            Error DFERR_PROGRAM "DF_SEQ_CHANNEL_NOT_AVAILABLE"
+            Function_Return DF_SEQ_CHANNEL_NOT_AVAILABLE
+        End
+        Append_Output channel iCh sFileName
+        Function_Return iCh
+    End_Function
+    
+    Procedure CloseAppendOutput Global Integer iCh
+        Close_Input channel iCh
+        Send Seq_Release_Channel iCh
+    End_Procedure
+
+#ENDIF    
 Use LanguageText.pkg
+
+//Define ShouldEmbeddAboutHelpFile for 0
 
 Register_Function phoWorkspace Returns Handle
 Register_Function Help_filename Returns String
@@ -1187,9 +1272,9 @@ Class cAboutEdit is an cRichEdit
     // for the text to become visible. See Also: Procedure Page below.
     Procedure Add_LineLn String sText
         String sContentText sCR
-        Move (Character(10) + String(Character(13))) to sCR
+        Move (Character(13) + String(Character(10))) to sCR
         Get psContentText to sContentText
-        Move (sContentText + String(sText)) to sContentText
+        Move (sContentText + sCR + String(sText)) to sContentText
         Set psContentText to sContentText
     End_Procedure
 
@@ -1225,9 +1310,12 @@ Class cAboutEdit is an cRichEdit
     End_Procedure
 
     // Dummy to embed the .rtf file into the program.
-    Procedure EmbeddAboutDFRefactorFile
+#IFDEF ShouldEmbeddAboutHelpFile
+    Procedure EmbeddAboutHelpFile
         Include_Resource ..\Help\About.rtf as res_AboutFile type DF_RESOURCE_TYPE_BINARY
     End_Procedure
+#ENDIF
+
 End_Class
 
 Use cRDCModalPanel.pkg
