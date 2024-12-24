@@ -1212,10 +1212,10 @@ Class SysInfoDialog is a ModalPanel
         End_Object
 
         Object oCloseButton is a Button
+            On_Item C_$Close Send Close_Panel
             Set Label to C_$Close
             Set Location to 120 210
-            Set Message 0 to msg_OnClick
-            Set Default_State To True
+            Set Default_State to True
             // In case someone likes to make the AboutDialog's Border_Style to thick,
             // and changes its peAnchors, we might as well prepare this object
             // for that situation.
