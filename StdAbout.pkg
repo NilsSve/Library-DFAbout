@@ -118,7 +118,7 @@ Procedure DoAbout String sTitle String sVersion String sCopyRight String sAuthor
                 Move "" to sValue
             End
             Else Begin       
-                If (not(Lowercase(sVersion) contains "ver")) Begin
+                If (sVersion <> "" and not(Lowercase(sVersion) contains "ver")) Begin
                     Move (C_$Version + ":" * String(sVersion)) to sVersion
                 End
                 Move sVersion to sValue
