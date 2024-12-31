@@ -1,4 +1,11 @@
-﻿Use Windows.pkg
+﻿// If you get a compile error about a resource. "..\APPSRC\COMPILEHEADER.H", 
+// you need to compile the program "WriteDateTimeHeaderFile.src" first!
+//
+// If you get a compile error: "Can't include resource ..\HELP\ABOUT.RTF",
+// you need to create a "About.rtf" file in the Help folder.
+// Note that it can be empty, but it needs to exist for the About dialog.
+//
+Use Windows.pkg
 Use Dfclient.pkg
 Use DFbitmap.pkg
 Use GlobalFunctionsProcedures.pkg
@@ -8,11 +15,11 @@ Use cRichEdit.pkg
 Use gFormatNumbers.pkg
 Use tWinStructs.pkg
 
-Use cli.pkg
 Use DFBTRDRV.PKG
 Use MSSqldrv.pkg
 Use db2_drv.pkg
 Use odbc_drv.pkg
+
 #IF (!@ > 210)
     Use WsGlobalFunctions.pkg
 #ELSE
@@ -98,8 +105,6 @@ Use odbc_drv.pkg
 
 #ENDIF    
 Use LanguageText.pkg
-
-//Define ShouldEmbeddAboutHelpFile for 0
 
 Register_Function phoWorkspace Returns Handle
 Register_Function Help_filename Returns String
@@ -1282,25 +1287,48 @@ Class cAboutEdit is an cRichEdit
         String sLinkText
         Get TextRange iPositionStart iPositionEnd to sLinkText
         Send Show_HomePage sLinkText
+    End_Procedure 
+    
+    Function AddFolderBackslash String sFolderName Returns String
+        String sDirSep
+        Move (SysConf(SYSCONF_DIR_SEPARATOR)) to sDirSep  // normally \ (backslash)
+        Move (Trim(sFolderName)) to sFolderName
+        If (Right(sFolderName, 1) <> sDirSep) Begin
+            Move (sFolderName + sDirSep) to sFolderName
+        End
+        Function_Return sFolderName
+    End_Function
+
+Define ShouldEmbeddAboutHelpFile for 0
+
+#IFDEF ShouldEmbeddAboutHelpFile
+    // Dummy procedure to embed the About.rtf file into the program.
+    Procedure EmbeddAboutHelpFile
+        Include_Resource ..\Help\About.rtf as res_AboutFile type DF_RESOURCE_TYPE_BINARY
     End_Procedure
+#ENDIF
 
     Procedure Page Integer iPageObject
-        String sContentText sExternalInfo sLine sPath sData
+        String sContentText sExternalInfo sLine sPath sData sFileName
         UChar[] uData  
-        Integer iCh
-        Forward Send Page iPageObject
+        Integer iCh iType
 
+        Forward Send Page iPageObject
         Get psHelpPath of (phoWorkspace(ghoApplication)) to sPath
-        Get vFolderFormat sPath to sPath
+        Get AddFolderBackslash sPath to sPath
         
-        If (pbShowRTFFile(Self) = True) Begin
+        If (pbShowRTFFile(Self) = True) Begin 
+            Get_Resource_Type res_AboutFile to iType
+            If (iType = DF_RESOURCE_TYPE_ERROR) Begin
+                Procedure_Return
+            End
             Get OpenInput "resource: res_AboutFile" to iCh
             If (iCh < 0) Begin
                 Procedure_Return
             End
             Read_Block channel iCh uData -1
             Move (UCharArrayToString(uData)) to sData
-            Send AppendTextLn sData
+            Send AppendText sData
             Send CloseInput iCh
         End
         
@@ -1308,13 +1336,6 @@ Class cAboutEdit is an cRichEdit
         Send AppendText sContentText 
         Send Beginning_of_Data
     End_Procedure
-
-    // Dummy to embed the .rtf file into the program.
-#IFDEF ShouldEmbeddAboutHelpFile
-    Procedure EmbeddAboutHelpFile
-        Include_Resource ..\Help\About.rtf as res_AboutFile type DF_RESOURCE_TYPE_BINARY
-    End_Procedure
-#ENDIF
 
 End_Class
 
@@ -1435,9 +1456,9 @@ Class AboutDialog is a cRDCModalPanel
         Set LogoDF to "DF32.bmp"
     End_Procedure    
 
-    Procedure DummyCompileResource
+    Procedure DummyCompileResource          
         // This is used by the About object to display the compile date & time:
-        Include_Resource ..\Data\CompileHeader.h as res_CompileHeader type DF_RESOURCE_TYPE_LINE
+        Include_Resource ..\AppSrc\CompileHeader.h as res_CompileHeader type DF_RESOURCE_TYPE_LINE
     End_Procedure
     
     Function psCompileDateAndTime Returns String
