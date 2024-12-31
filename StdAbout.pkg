@@ -1,4 +1,4 @@
-//************************************************************************
+﻿//************************************************************************
 // Confidential Trade Secret.
 // Copyright (c) 1997 Data Access Corporation, Miami Florida
 // as an unpublished work.  All rights reserved.
@@ -84,7 +84,9 @@ Procedure DoAbout String sTitle String sVersion String sCopyRight String sAuthor
         Move num_arguments to iArgs
         
         If (iArgs > 4 and sTitle = "" and sVersion = "" and sCopyRight = "" and sAuthor = "") Begin
-            Set pbShowRTFFile to True    
+            #IFDEF ShouldEmbeddAboutHelpFile
+                Set pbShowRTFFile to True
+            #ENDIF            
             Set Version to sVersion
         End
         Else Begin
@@ -106,7 +108,7 @@ Procedure DoAbout String sTitle String sVersion String sCopyRight String sAuthor
             End
     
             If (sValue <> "") Begin
-    //            Send Add_LineLn sValue
+                Send Add_LineLn sValue
             End
             Move "" to sValue
     
@@ -115,7 +117,10 @@ Procedure DoAbout String sTitle String sVersion String sCopyRight String sAuthor
             If (iArgs < 2) Begin
                 Move "" to sValue
             End
-            Else Begin
+            Else Begin       
+                If (not(Lowercase(sVersion) contains "ver")) Begin
+                    Move (C_$Version + ":" * String(sVersion)) to sVersion
+                End
                 Move sVersion to sValue
             End
             Set Version to sValue
