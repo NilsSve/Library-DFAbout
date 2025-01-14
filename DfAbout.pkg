@@ -15,6 +15,7 @@ Use cRichEdit.pkg
 Use gFormatNumbers.pkg
 Use tWinStructs.pkg
 
+Use cli.pkg
 Use DFBTRDRV.PKG
 Use MSSqldrv.pkg
 Use db2_drv.pkg
