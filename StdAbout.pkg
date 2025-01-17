@@ -70,7 +70,7 @@ End_Procedure
 Procedure DoAbout String sTitle String sVersion String sCopyRight String sAuthor String sBitmap ;
     String sParam6 String sParam7 String sParam8 String sParam9 String sParam10
     Integer hoObj hoMain iArgs
-    String sValue
+    String sValue sVer sCompany
 
     // Create object
     Object About is an AboutDialog
@@ -90,20 +90,37 @@ Procedure DoAbout String sTitle String sVersion String sCopyRight String sAuthor
             Set Version to sVersion
         End
         Else Begin
+            If (sCopyRight = "") Begin
+                Get piVersionMajor of (phoVersionInfo(ghoApplication)) to sVer
+                Get psCompany      of ghoApplication                   to sCompany
+                Move ("Copyright:" * String(sVer) * String(sCompany)) to sCopyRight
+            End
             // If no title is passed use the label of the main panel (if a main panel exists).
             If (iArgs > 0 and sTitle = "") Begin
-                Get Main_Window of Desktop to hoMain
-                If hoMain Begin
-                    Get Label of hoMain to sValue
+                Get psProduct of ghoApplication to sValue
+                If (sValue <> "") Begin
+                    Move ("Program:" * sValue) to sValue
+                End 
+                Else Begin
+                    Get Main_Window of Desktop to hoMain
+                    If hoMain Begin
+                        Get Label of hoMain to sValue
+                    End
                 End
             End
             Else If (iArgs > 0 and sTitle <> "") Begin
                 Move sTitle to sValue
             End
             Else If (iArgs = 0) Begin
-                Get Main_Window of Desktop to hoMain
-                If hoMain Begin
-                    Get Label of hoMain to sValue
+                Get psProduct of ghoApplication to sValue
+                If (sValue <> "") Begin
+                    Move ("Program:" * sValue) to sValue
+                End 
+                Else Begin
+                    Get Main_Window of Desktop to hoMain
+                    If hoMain Begin
+                        Get Label of hoMain to sValue
+                    End
                 End
             End
     
