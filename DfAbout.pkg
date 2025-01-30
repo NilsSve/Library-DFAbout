@@ -1466,14 +1466,23 @@ Class AboutDialog is a cRDCModalPanel
         String sCompileTime  
         Integer iPos
 
+#IF (!@ > 240)
+        UBigInt ullUnixUTC
+        DateTime dtCompileTime
+        Move COMP$TIMESTAMP to ullUnixUTC 
+        Move 1/1/1970 to dtCompileTime
+        Move (DateAddSecond(dtCompileTime, ullUnixUTC)) to dtCompileTime
+        Move dtCompileTime to sCompileTime
+#ELSE
         Direct_Input "resource: res_CompileHeader"
         Readln sCompileTime
+        Close_Input
         Move (Pos('"', sCompileTime)) to iPos
         If (iPos <> 0) Begin
             Move (Mid(sCompileTime, Length(sCompileTime), (iPos + 1))) to sCompileTime
             Move (Replaces('"', sCompileTime, '')) to sCompileTime
         End
-        Close_Input
+#ENDIF
         Function_Return sCompileTime
     End_Function
 
