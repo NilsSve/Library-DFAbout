@@ -1340,11 +1340,11 @@ Define ShouldEmbeddAboutHelpFile for 0
 
 End_Class
 
-Use cRDCModalPanel.pkg
+Use cAboutModalPanel.pkg
 { OverrideProperty=StatusBar_Id DesignTime=False }
 { OverrideProperty=ToolBar_Id DesignTime=False }
 { HelpTopic=AboutDialog }
-Class AboutDialog is a cRDCModalPanel
+Class AboutDialog is a cAboutModalPanel
     Procedure Construct_Object
 
         Forward Send Construct_Object
