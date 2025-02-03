@@ -1457,10 +1457,12 @@ Class AboutDialog is a cRDCModalPanel
         Set LogoDF to "DF32.bmp"
     End_Procedure    
 
+#IF (!@ < 250)
     Procedure DummyCompileResource          
         // This is used by the About object to display the compile date & time:
         Include_Resource ..\AppSrc\CompileHeader.h as res_CompileHeader type DF_RESOURCE_TYPE_LINE
     End_Procedure
+#ENDIF
     
     Function psCompileDateAndTime Returns String
         String sCompileTime  
