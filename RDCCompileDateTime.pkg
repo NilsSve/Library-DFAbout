@@ -50,15 +50,11 @@ Class cFileCompileDateAndTime is a cObject
         Move dwLowDateTime  to FileTime.dwLowDateTime
         Move dwHighDateTime to FileTime.dwHighDateTime
     
-        Move (FileTimeToSystemTime (AddressOf (FileTime), AddressOf (SystemTime))) to iSuccess
+        Move (CreationFileFileTimeToSystemTime (AddressOf (FileTime), AddressOf (SystemTime))) to iSuccess
         If (iSuccess <> 0) Begin
-            Move 0 to SystemTime.wYear
-            Move (CreationFileFileTimeToSystemTime (AddressOf (FileTime), AddressOf (SystemTime))) to iSuccess
-            If (iSuccess = 1) Begin
-                Get SystemTimeToDateTime SystemTime to dtResult 
-                // We don't care about milli seconds:
-                Move (DateSetMillisecond(dtResult, 0)) to dtResult
-            End
+            Get SystemTimeToDateTime SystemTime to dtResult 
+            // We don't care about milli seconds:
+            Move (DateSetMillisecond(dtResult, 0)) to dtResult
         End
     
         Function_Return dtResult
@@ -155,7 +151,7 @@ Function ProgramCompileDate Global String sFileName Returns DateTime
     DateTime dtFileTime
 
     // From DataFlex 2025 there is a system function that returns the compiled date & time.
-#IF (!@ > 340)
+#IF (!@ > 240)
     UBigInt ullUnixUTC
     Move COMP$TIMESTAMP to ullUnixUTC 
     Move 1/1/1970 to dtFileTime
