@@ -1,0 +1,169 @@
+﻿/*
+    Package with general purpose function "ProgramCompileDate" that returns
+    the running program's date & time.
+*/
+Use RDCCompileDateTime.h.pkg
+
+Class cFileCompileDateAndTime is a cObject
+    
+    Procedure Construct_Object
+        Forward Send Construct_Object
+            
+    End_Procedure
+        
+    // Pass the sFileName with full path
+    // Returns the date & time when it was created.
+    Function CreationFileCompilationTime String sFileName Returns DateTime
+        tWinFileTime FileTime
+        DateTime dtFileTime
+        tWin32FindDataW Win32FindData
+        tFileDateTime FileDateTime
+        Handle hFile
+        Integer iRetval iErrorNumber iVoid
+        String sCompileTime
+        
+        Move "" to sCompileTime 
+        Move 0 to iVoid
+        Move (winFindFirstFileW (sFileName, AddressOf(Win32FindData))) to hFile
+        If (hFile = INVALID_HANDLE_VALUE) Begin
+            Move (GetLastError()) to iErrorNumber
+            If (iErrorNumber <> 0) Begin
+                Send ShowCompileTimeFileError iErrorNumber sFileName
+            End
+        End
+
+        Move (PointerToWString (AddressOf(Win32FindData) + SizeOfType (tWin32FindData) - MAX_PATH - MAX_ALTPATH)) to FileDateTime.sFileName
+        Move Win32FindData.dwFileAttributes to FileDateTime.iAttributes
+        Get ConvertDateTimeToSystemDateTime Win32FindData.ftCreationTime.dwLowDateTime Win32FindData.ftCreationTime.dwHighDateTime to FileDateTime.dtCreated
+
+        Move (winFindClose (hFile)) to iVoid
+        Function_Return FileDateTime.dtCreated
+    End_Function
+    
+    Function ConvertDateTimeToSystemDateTime UInteger dwLowDateTime UInteger dwHighDateTime Returns DateTime
+        WString sFormattedTime sFormattedDate
+        Integer iSuccess iDataLength
+        tWinSystemTime SystemTime
+        tWinFileTime FileTime
+        DateTime dtResult
+    
+        Move dwLowDateTime  to FileTime.dwLowDateTime
+        Move dwHighDateTime to FileTime.dwHighDateTime
+    
+        Move (FileTimeToSystemTime (AddressOf (FileTime), AddressOf (SystemTime))) to iSuccess
+        If (iSuccess <> 0) Begin
+            Move 0 to SystemTime.wYear
+            Move (CreationFileFileTimeToSystemTime (AddressOf (FileTime), AddressOf (SystemTime))) to iSuccess
+            If (iSuccess = 1) Begin
+                Get SystemTimeToDateTime SystemTime to dtResult 
+                // We don't care about milli seconds:
+                Move (DateSetMillisecond(dtResult, 0)) to dtResult
+            End
+        End
+    
+        Function_Return dtResult
+    End_Function
+
+    Function SystemTimeToDateTime tWinSystemTime SystemTime Returns DateTime
+        String sFormattedTime sFormattedDate
+        Integer iDecimalSeparator
+        DateTime dtResult
+
+        Get FormatSystemTimeToTime SystemTime to sFormattedTime
+        If (SystemTime.wMilliseconds > 0) Begin
+            Get_Attribute DF_DECIMAL_SEPARATOR to iDecimalSeparator
+            Move (sFormattedTime + Character (iDecimalSeparator) + Cast (SystemTime.wMilliseconds, String)) to sFormattedTime
+        End
+        Get FormatSystemTimeToDate SystemTime to sFormattedDate
+
+        Move (sFormattedDate * sFormattedTime) to dtResult
+
+        Function_Return dtResult
+    End_Function
+
+    Function FormatSystemTimeToDate tWinSystemTime SystemTime Returns Date
+        Integer iDataLength
+        WString wsFormattedDate wsLocaleName
+        Date dFormattedDate
+
+        Move "" to wsLocaleName
+        Move (WinAPI_GetDateFormatEx (AddressOf (wsLocaleName), 0, AddressOf (SystemTime), 0, 0, 0, 0)) to iDataLength
+        Move (ZeroString (iDataLength)) to wsFormattedDate
+        Move (WinAPI_GetDateFormatEx (AddressOf (wsLocaleName), 0, AddressOf (SystemTime), 0, AddressOf (wsFormattedDate), iDataLength, 0)) to iDataLength
+
+        Move (Date (Cstring (wsFormattedDate))) to dFormattedDate
+
+        Function_Return dFormattedDate
+    End_Function
+
+    Function FormatSystemTimeToTime tWinSystemTime SystemTime Returns Time
+        Integer iDataLength
+        WString wsFormattedTime wsLocaleName
+        tTimeZoneInformation TimeZoneInfo
+        Time tFormattedTime
+
+        Move "" to wsLocaleName
+        Move (WinAPI_GetTimeFormatEx (AddressOf (wsLocaleName), 0, AddressOf (SystemTime), 0, 0, 0)) to iDataLength
+        Move (ZeroString (iDataLength)) to wsFormattedTime
+        Move (WinAPI_GetTimeFormatEx (AddressOf (wsLocaleName), 0, AddressOf (SystemTime), 0, AddressOf (wsFormattedTime), iDataLength)) to iDataLength
+        Move (CString (wsFormattedTime)) to tFormattedTime
+        
+        // This makes the time to be one hour higher than the actual time(!). Not sure why.
+//        Get TimeZoneInformation to TimeZoneInfo
+        Move (DateAddHour  (tFormattedTime, TimeZoneInfo.DaylightDate.wHour)) to tFormattedTime
+        Function_Return tFormattedTime
+    End_Function
+
+    Function TimeZoneInformation Returns tTimeZoneInformation
+        tTimeZoneInformation TimeZoneInfo
+        Integer iRetval
+
+        Move (WinAPI_GetTimeZoneInformation (AddressOf (TimeZoneInfo))) to iRetval
+
+        Function_Return TimeZoneInfo
+    End_Function
+    
+    Procedure ShowCompileTimeFileError Integer iErrorNumber String sAppendErrorText
+        Pointer lpOut
+        Integer iRetChars iRetVal
+        String sFilename sMessage
+        WString wsMsg
+        
+        Move 0 to lpOut
+        Move (FormatMessageW((FORMAT_MESSAGE_FROM_SYSTEM+FORMAT_MESSAGE_IGNORE_INSERTS+FORMAT_MESSAGE_ALLOCATE_BUFFER), CreationNULL, iErrorNumber, CreationNULL, AddressOf(lpOut), 0, CreationNULL)) to iRetChars
+        If (iRetChars > 0) Begin
+            Move (ZeroString(iRetChars)) to wsMsg
+            Move (CopyMemory(AddressOf(wsMsg), lpOut, iRetChars * 2)) to iRetVal
+            Move (Free(lpOut)) to iRetVal
+            Move wsMsg to sMessage
+            If (num_arguments > 0) Begin
+                Move (Trim(sAppendErrorText)) to sAppendErrorText
+                If (sAppendErrorText <> "") Begin
+                    Move (sMessage + "\n" + sAppendErrorText) to sMessage
+                End
+            End
+            Send Info_Box sMessage
+        End
+    End_Procedure
+
+End_Class
+
+Function ProgramCompileDate Global String sFileName Returns DateTime
+    tWinFileTime CreationFileTime
+    String sCompileTime
+    Handle ho
+    DateTime dtFileTime
+
+    // From DataFlex 2025 there is a system function that returns the compiled date & time.
+#IF (!@ > 340)
+    UBigInt ullUnixUTC
+    Move COMP$TIMESTAMP to ullUnixUTC 
+    Move 1/1/1970 to dtFileTime
+    Move (DateAddSecond(dtFileTime, ullUnixUTC)) to dtFileTime
+#ELSE
+    Get Create (RefClass(cFileCompileDateAndTime)) to ho
+    Get CreationFileCompilationTime of ho sFileName to dtFileTime
+    Send Destroy of ho
+#ENDIF
+    Function_Return dtFileTime
+End_Function

@@ -1,0 +1,106 @@
+﻿Use Winkern.pkg
+Use tWinStructs.pkg
+Use cWorkspace.pkg
+
+// This struct is from tWinStructs.pkg
+// A 64-bit value representing the number of 100-nanosecond intervals since January 1, 1601 (UTC).
+//Struct tWinFileTime
+//    UInteger dwLowDateTime   // Low-order part of the file time.
+//    UInteger dwHighDateTime  // High-order part of the file time.
+//End_Struct
+
+Struct tFileDateTime
+    String sFileName
+    DateTime dtCreated
+    DateTime dtLastAccessed
+    DateTime dtLastWrite
+    UInteger iAttributes
+End_Struct
+
+Struct tTimeZoneInformation
+    Integer Bias
+    UShort[32] StandardName
+    tWinSystemTime StandardDate
+    Integer StandardBias
+    UShort[32] DaylightName
+    tWinSystemTime DaylightDate
+    Integer DaylightBias
+End_Struct
+
+Define CreationNULL              for |CI$0
+Define CreationOpen_Existing     for |CI$00000003
+Define CreationGeneric_Read      for |CI$80000000
+Define CreationGeneric_Write     for |CI$40000000
+Define CreationFile_Share_Read   for |CI$1
+Define CreationFile_Share_Write  for |CI$2
+Define CreationFile_Share_Random for (CreationFile_Share_Read + CreationFile_Share_Write)
+
+External_Function WinApi_GetDateFormatEx "GetDateFormatEx" Kernel32.Dll ;
+    Pointer lpLocaleName ;
+    UInteger dwFlags ;
+    Pointer lpsSystemTime ;
+    Pointer lpFormat ;
+    Pointer lpDateStr ;
+    Integer cchDate ;
+    Pointer lpCalendar ;
+    Returns Integer
+
+External_Function WinApi_GetTimeFormatEx "GetTimeFormatEx" Kernel32.Dll ;
+    Pointer lpLocaleName ;
+    UInteger dwFlags ;
+    Pointer lpsSystemTime ;
+    Pointer lpFormat ;
+    Pointer lpTimeStr ;
+    Integer cchTime ;
+    Returns Integer
+
+External_Function WinApi_GetTimeFormat "GetTimeFormatW" Kernel32.Dll ;
+    UInteger LCID ;
+    UInteger dwFlags ;
+    Pointer lpsSystemTime ;
+    Pointer lpFormat ;
+    Pointer lpTimeStr ;
+    Integer cchTime ;
+    Returns Integer
+
+External_Function CreationFileGetFileTime "GetFileTime" Kernel32.dll ;
+    Handle  hFile  ;                // Handle For a file from createfile with read access
+    Pointer lpCreationtime ;        // Pointer to a FILETIME structure containing the file creation time
+    Pointer lpLastAccesstime ;      // Pointer to a FILETIME structure containing the file last access time
+    Pointer lpLastWritetime ;       // Pointer to a FILETIME structure containing the file last write time
+    Returns Integer
+ 
+External_Function CreationFileCreateFile "CreateFileW" kernel32.dll ;
+    WString lpFile ;      // filename
+    DWord dwDesAccess ;   // access mode
+    DWord dwShare ;       // share mode
+    Pointer lpSecAtt ;    // SD
+    DWord dwCrDisp ;      // how to create
+    DWord dwFlags ;       // file attributes
+    Handle hTempFile ;   // handle to template fil
+    Returns Integer      //Returns handle that can be used to access the object
+
+External_Function CreationFileCloseHandle "CloseHandle" kernel32.dll ;
+    Handle hObject ;        // handle to object
+    Returns Integer
+
+External_Function CreationFileGetTimeFormat "GetTimeFormatW" Kernel32.Dll ;
+    DWord LCID DWord dwFlags Pointer lpsSystemTime Pointer lpFormat Pointer lpTimeStr ;
+    Integer cchTime Returns Integer
+
+External_Function CreationFileGetDateFormat "GetDateFormatW" Kernel32.Dll ;
+  DWord LCID DWord dwFlags Pointer lpsSystemTime Pointer lpFormat Pointer lpDateStr ;
+  Integer cchDate Returns Integer
+
+External_Function CreationFileFileTimeToSystemTime "FileTimeToSystemTime" Kernel32.Dll ;
+  Pointer lpFileTime Pointer lpsystemTime Returns Integer
+
+External_Function CreationFileSystemTimeToTzSpecificLocalTime "SystemTimeToTzSpecificLocalTime" Kernel32.dll ;
+    Pointer lpTimeZone ;            // A pointer to a TIME_ZONE_INFORMATION structure that specifies the time zone of interest.
+    Pointer lpUniversalTime ;       // A pointer to a SYSTEMTIME structure that specifies a time, in UTC.
+    Pointer lpLocalTime ;           // A pointer to a SYSTEMTIME structure that receives the local time.
+    Returns Integer
+
+External_Function WinAPI_GetTimeZoneInformation "GetTimeZoneInformation" Kernel32.Dll ;
+    Pointer lpTimeZoneInformation ;
+    Returns UInteger
