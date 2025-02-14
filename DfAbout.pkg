@@ -21,7 +21,7 @@ Use MSSqldrv.pkg
 Use db2_drv.pkg
 Use odbc_drv.pkg
 
-RDCCompileDateTime.pkg
+Use RDCCompileDateTime.pkg
 
 #IF (!@ > 210)
     Use WsGlobalFunctions.pkg
