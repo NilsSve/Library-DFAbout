@@ -1320,6 +1320,7 @@ Define ShouldEmbeddAboutHelpFile for 0
         Get psHelpPath of (phoWorkspace(ghoApplication)) to sPath
         Get AddFolderBackslash sPath to sPath
         
+#IFDEF ShouldEmbeddAboutHelpFile
         If (pbShowRTFFile(Self) = True) Begin 
             Get_Resource_Type res_AboutFile to iType
             If (iType = DF_RESOURCE_TYPE_ERROR) Begin
@@ -1334,9 +1335,9 @@ Define ShouldEmbeddAboutHelpFile for 0
             Send AppendText sData
             Send CloseInput iCh
         End
-        
         Get psContentText to sContentText
         Send AppendText sContentText 
+#ENDIF        
         Send Beginning_of_Data
     End_Procedure
 
