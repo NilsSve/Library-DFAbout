@@ -1307,7 +1307,12 @@ Define ShouldEmbeddAboutHelpFile for 0
 #IFDEF ShouldEmbeddAboutHelpFile
     // Dummy procedure to embed the About.rtf file into the program.
     Procedure EmbeddAboutHelpFile
+
+#IF (!@ > 230)
+        Include_Text ..\Help\About.rtf as res_AboutFile
+#ELSE
         Include_Resource ..\Help\About.rtf as res_AboutFile type DF_RESOURCE_TYPE_BINARY
+#ENDIF        
     End_Procedure
 #ENDIF
 
