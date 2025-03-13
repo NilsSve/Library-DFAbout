@@ -1,6 +1,7 @@
 ﻿/*
     Package with general purpose function "ProgramCompileDate" that returns
     the running program's date & time.
+    See: Function ProgramCompileDate at end of package.
 */
 Use RDCCompileDateTime.h.pkg
 
@@ -144,6 +145,7 @@ Class cFileCompileDateAndTime is a cObject
 
 End_Class
 
+// *** Main Interface Message ***
 Function ProgramCompileDate Global String sFileName Returns DateTime
     tWinFileTime CreationFileTime
     String sCompileTime
