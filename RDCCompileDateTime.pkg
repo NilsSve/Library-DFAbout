@@ -51,7 +51,7 @@ Class cFileCompileDateAndTime is a cObject
         Move dwLowDateTime  to FileTime.dwLowDateTime
         Move dwHighDateTime to FileTime.dwHighDateTime
     
-        Move (CreationFileFileTimeToSystemTime (AddressOf (FileTime), AddressOf (SystemTime))) to iSuccess
+        Move (CompileTimeFileFileTimeToSystemTime (AddressOf (FileTime), AddressOf (SystemTime))) to iSuccess
         If (iSuccess <> 0) Begin
             Get SystemTimeToDateTime SystemTime to dtResult 
             // We don't care about milli seconds:
@@ -84,9 +84,9 @@ Class cFileCompileDateAndTime is a cObject
         Date dFormattedDate
 
         Move "" to wsLocaleName
-        Move (WinAPI_GetDateFormatEx (AddressOf (wsLocaleName), 0, AddressOf (SystemTime), 0, 0, 0, 0)) to iDataLength
+        Move (CompileTimeGetDateFormatEx (AddressOf (wsLocaleName), 0, AddressOf (SystemTime), 0, 0, 0, 0)) to iDataLength
         Move (ZeroString (iDataLength)) to wsFormattedDate
-        Move (WinAPI_GetDateFormatEx (AddressOf (wsLocaleName), 0, AddressOf (SystemTime), 0, AddressOf (wsFormattedDate), iDataLength, 0)) to iDataLength
+        Move (CompileTimeGetDateFormatEx (AddressOf (wsLocaleName), 0, AddressOf (SystemTime), 0, AddressOf (wsFormattedDate), iDataLength, 0)) to iDataLength
 
         Move (Date (Cstring (wsFormattedDate))) to dFormattedDate
 
@@ -100,9 +100,9 @@ Class cFileCompileDateAndTime is a cObject
         Time tFormattedTime
 
         Move "" to wsLocaleName
-        Move (WinAPI_GetTimeFormatEx (AddressOf (wsLocaleName), 0, AddressOf (SystemTime), 0, 0, 0)) to iDataLength
+        Move (CompileTimeGetTimeFormatEx (AddressOf (wsLocaleName), 0, AddressOf (SystemTime), 0, 0, 0)) to iDataLength
         Move (ZeroString (iDataLength)) to wsFormattedTime
-        Move (WinAPI_GetTimeFormatEx (AddressOf (wsLocaleName), 0, AddressOf (SystemTime), 0, AddressOf (wsFormattedTime), iDataLength)) to iDataLength
+        Move (CompileTimeGetTimeFormatEx (AddressOf (wsLocaleName), 0, AddressOf (SystemTime), 0, AddressOf (wsFormattedTime), iDataLength)) to iDataLength
         Move (CString (wsFormattedTime)) to tFormattedTime
         
         // This makes the time to be one hour higher than the actual time(!). Not sure why.
@@ -115,7 +115,7 @@ Class cFileCompileDateAndTime is a cObject
         tTimeZoneInformation TimeZoneInfo
         Integer iRetval
 
-        Move (WinAPI_GetTimeZoneInformation (AddressOf (TimeZoneInfo))) to iRetval
+        Move (CompileTimeGetTimeZoneInformation (AddressOf (TimeZoneInfo))) to iRetval
 
         Function_Return TimeZoneInfo
     End_Function
