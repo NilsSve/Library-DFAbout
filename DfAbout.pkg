@@ -13,7 +13,6 @@ Use cRichEdit.pkg
 Use cTextEdit.pkg
 Use cRichEdit.pkg
 Use gFormatNumbers.pkg
-Use tWinStructs.pkg
 
 Use cli.pkg
 Use DFBTRDRV.PKG
