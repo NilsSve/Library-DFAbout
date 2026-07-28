@@ -1304,10 +1304,31 @@ Class cAboutEdit is an cRichEdit
 Define ShouldEmbeddAboutHelpFile for 0
 
 #IFDEF ShouldEmbeddAboutHelpFile
-    // Dummy procedure to embed the About.rtf file into the program.
+    /* Dummy procedure to embed the About.rtf file into the program. Nothing calls it -
+       the resource is emitted because the procedure is COMPILED, and Page below reads it
+       back by name.
+
+       AN APPLICATION CAN SUPPLY ITS OWN. A resource name can only be bound once
+       (Include_Resource twice under one name is compile error 4301), so an application
+       that wants different About text - a dark copy to match a dark UI, say - cannot
+       simply add its own binding. It defines UseCustomAboutResource before Use
+       DfAbout.pkg and then binds res_AboutFile itself:
+
+           Define UseCustomAboutResource for 1
+           Use DfAbout.pkg
+           Class cAboutEditMine is a cAboutEdit
+               Procedure EmbeddAboutHelpFile
+                   Include_Resource ..\Help\MyAbout.rtf as res_AboutFile type DF_RESOURCE_TYPE_BINARY
+               End_Procedure
+           End_Class
+
+       The subclass never needs to be instantiated; compiling it is what binds the name.
+       Page reads whichever binding exists, so nothing else changes. */
+#IFNDEF UseCustomAboutResource
     Procedure EmbeddAboutHelpFile
         Include_Resource ..\Help\About.rtf as res_AboutFile type DF_RESOURCE_TYPE_BINARY
     End_Procedure
+#ENDIF
 
     Procedure Page Integer iPageObject
         String sContentText sExternalInfo sLine sPath sData sFileName
