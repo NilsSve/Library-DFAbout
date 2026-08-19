@@ -1,0 +1,11 @@
+{
+    "description": "About dialog for DataFlex applications, with system information and licence details.",
+    "df": 26.0,
+    "paths": {
+        "configFile": "Config.ws"
+    },
+    "studio": {
+        "DefaultFormHeight": 12
+    },
+    "workspaceName": "DFAbout"
+}
