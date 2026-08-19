@@ -1,7 +1,11 @@
 {
     "description": "About dialog for DataFlex applications, with system information and licence details.",
     "df": 26.0,
-    "icon": "PoweredByDataFlex.png",
+    "package": {
+        "df-min": 26.0,
+        "icon": "PoweredByDataFlex.png",
+        "version": "1.0.0"
+    },
     "paths": {
         "configFile": "Config.ws"
     },
