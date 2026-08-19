@@ -1,0 +1,3 @@
+# DataFlex Studio per-user desktop state - one file per developer per machine, named
+# <user>_*.dsk. Nothing in them describes the library, so they only ever cause conflicts.
+*.dsk

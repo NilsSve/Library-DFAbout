@@ -3,7 +3,6 @@
     "df": 26.0,
     "package": {
         "df-min": 26.0,
-        "icon": "PoweredByDataFlex.png",
         "version": "1.0.0"
     },
     "paths": {
