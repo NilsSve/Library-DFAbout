@@ -1,5 +1,5 @@
 {
-    "description": "About dialog for DataFlex applications, with system information and licence details.",
+    "description": "A plug in improved About dialog with automatic version and compile time info.",
     "df": 26.0,
     "package": {
         "df-min": 26.0,
