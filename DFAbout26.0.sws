@@ -1,6 +1,16 @@
-[Properties]
-Version=26.0
-[WorkspacePaths]
-ConfigFile=.\Config.ws
-[Preferences]
-DefaultFormHeight=12
+{
+    "description": "A plug in improved About dialog with automatic version and compile time info.",
+    "df": 26.0,
+    "package": {
+        "df-min": 26.0,
+        "icon": "RDC-Mark.svg",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "configFile": "Config.ws"
+    },
+    "studio": {
+        "DefaultFormHeight": 12
+    },
+    "workspaceName": "DFAbout"
+}
