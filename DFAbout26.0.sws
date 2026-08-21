@@ -4,7 +4,7 @@
     "package": {
         "df-min": 26.0,
         "icon": "RDC-Mark.svg",
-        "version": "1.0.0"
+        "version": "1.0.1"
     },
     "paths": {
         "configFile": "Config.ws"
