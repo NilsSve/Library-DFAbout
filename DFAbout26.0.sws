@@ -4,6 +4,8 @@
     "package": {
         "df-min": 26.0,
         "icon": "RDC-Mark.svg",
+        "license": "MIT",
+        "licenseFile": "LICENSE",
         "version": "1.0.1"
     },
     "paths": {
