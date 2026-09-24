@@ -24,7 +24,7 @@ thing you need when a user reports a problem.
 **DataFlex 26 and later** — add it as a package:
 
 ```
-https://github.com/NilsSve/Library-DFAbout.git/DFAbout26.0.sws
+https://github.com/NilsSve/Library-DFAbout.git/RDC-DFAbout-Library-26.0.sws
 ```
 
 **DataFlex 25** — add `DFAbout25.0.sws` as a library in your workspace.
