@@ -24,13 +24,16 @@ thing you need when a user reports a problem.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-DFAbout.git/RDC-DFAbout-Library-26.0.sws#1.0.1
+https://github.com/NilsSve/Library-DFAbout.git/RDC-DFAbout-Library.sws#1.0.2
 ```
 
-Each release has a version tag (`1.0.1`, ...), listed under Tags on GitHub. Pin a tag, not a commit:
-DUF asks for DFAbout by version range (`^1.0.1`), and a range cannot accept a commit, so df-cli would
-report "Incompatible ref". Without the `#` part the workspace gets a commit. If your workspace also uses
-DUF, list DFAbout before it.
+Each release has a version tag (`1.0.2`, `1.0.3`, ...), listed under Tags on GitHub. Pin a tag, not a
+commit: DUF asks for DFAbout by version range (`^1.0.2`), and a range cannot accept a commit, so df-cli
+would report "Incompatible ref". Without the `#` part the workspace gets a commit. If your workspace also
+uses DUF, list DFAbout before it.
+
+From 1.0.2 on, the package file has no DataFlex version in its name. Release 1.0.1 still has the old
+name, `RDC-DFAbout-Library-26.0.sws`.
 
 **DataFlex 25** — add `DFAbout25.0.sws` as a library in your workspace.
 
