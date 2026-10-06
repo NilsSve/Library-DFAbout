@@ -669,21 +669,36 @@ Class cCopyEditorContentButton is a Button
     End_Procedure
 End_Class
 
-{ Visibility=Private }
-Class SysinfoDisplay is a cTextEdit
+/*  cAboutInfo - what the About dialog and the System Information panel SHOW, as data (2026-10-06).
+
+    Until then the dialogs gathered it themselves: the system information in a cTextEdit subclass
+    that wrote every line into its own editor, the version line and the certificate check in the
+    About panel. A program that wants to show the same facts another way - a web page, a report, a
+    log - could not get at them without those dialogs. This class gathers them and hands them over;
+    SysinfoDisplay and AboutDialog below ask it and show what they always showed.
+
+        Get Create (RefClass(cAboutInfo)) to hoInfo
+        Get VersionText             of hoInfo to sVersion     // "Version: 1.2.3.4", "" without version info
+        Get CompileDateAndTime      of hoInfo to sCompiled    // "" when the .exe does not say
+        Get IsProgramDigitallySigned of hoInfo to sSigned     // the sentence, "" unsigned, "-1" no signtool
+        Get SysInfoLines            of hoInfo to asLines      // the panel's lines, an empty one between groups
+        Send Destroy of hoInfo
+
+    The workspace object (EnumerateWorkspaceData) and the connection manager (EnumerateConnections)
+    append their own lines by sending AppendTextLn to the object they are handed - this one now, so
+    the message keeps its name. */
+Class cAboutInfo is a cObject
+
     Procedure Construct_Object
         Forward Send Construct_Object
-        Set Size to 100 245
-        Set Location to 6 6
-        Set Border_Style to Border_None
-        Set Read_Only_State to True
-        Set pbWrap to True
-        Set peAnchors to anAll
+        // The system-information lines gathered so far; SysInfoLines empties and fills it.
+        Property String[] pasLines
     End_Procedure
 
-    // Augmented class message to adjust certain text strings that are wrong...
-
+    // One line of system information. Sent by the gatherers below and by the workspace and connection
+    // objects' enumerations.
     Procedure AppendTextLn String sText
+        String[] asLines
         String sWorkspaceWSFile
 
         // Only works for English:
@@ -694,9 +709,108 @@ Class SysinfoDisplay is a cTextEdit
                 Move (sText * sWorkspaceWSFile) to sText
             End
         End
-        Send AppendText sText
-        Send AppendText (character(10))
+        Get pasLines to asLines
+        Move sText to asLines[SizeOfArray(asLines)]
+        Set pasLines to asLines
     End_Procedure
+
+    // The program's version line, "Version: 1.2.3.4" - "" when the program carries no version information.
+    Function VersionText Returns String
+        Handle hoVersionInfo
+        Boolean bIncluded
+        Integer iMajor iMinor iRelease iBuild
+        String sVersion
+
+        Move "" to sVersion
+        If (ghoApplication <> 0) Begin
+            Get phoVersionInfo of ghoApplication to hoVersionInfo
+            If (hoVersionInfo <> 0) Begin
+                Get pbIncluded of hoVersionInfo to bIncluded
+                If (bIncluded) Begin
+                    Get piVersionMajor of hoVersionInfo to iMajor
+                    Get piVersionMinor of hoVersionInfo to iMinor
+                    Get piVersionRelease of hoVersionInfo to iRelease
+                    Get piVersionBuild of hoVersionInfo to iBuild
+                    Move (SFormat (C_$VERSION + ": %1.%2.%3.%4", iMajor, iMinor, iRelease, iBuild)) to sVersion
+                End
+            End
+        End
+        Function_Return sVersion
+    End_Function
+
+    // The compile date and time of the running program, as RDCCompileDateTime reads it from the .exe.
+    Function CompileDateAndTime Returns String
+        String sProgramName sCompileTime
+
+        Get GetApplicationFileName of ghoApplication to sProgramName
+        Get ProgramCompileDate sProgramName to sCompileTime
+        Function_Return sCompileTime
+    End_Function
+
+    Function AddFolderDelimiter String sPath Returns String
+        String sDirSep
+        Move (SysConf(SYSCONF_DIR_SEPARATOR)) to sDirSep
+        Move (Trim(sPath)) to sPath
+        If (Right(sPath, 1) <> sDirSep) Begin
+            Move (sPath + sDirSep) to sPath
+        End
+        Function_Return sPath
+    End_Function
+
+    // Returns an empty string if the current program is not digitally signed,
+    // or there is a problem with the certificate.
+    // Note: A copy of the Microsoft signtool.exe program must reside in the Programs folder,
+    //       else nothing is shown in the About object. (Size 355 KB)
+    Function IsProgramDigitallySigned Returns String
+        Boolean bExists
+        String sPath sProgram sParams sRetval
+        Integer iCh
+
+        Move "" to sRetval
+        Get psProgramPath of (phoWorkspace(ghoApplication)) to sPath
+        Get AddFolderDelimiter sPath to sPath
+        File_Exist (sPath + CS_SignProgram) bExists
+        If (bExists = False) Begin
+            Function_Return "-1"
+        End
+
+        Get GetApplicationFileName of ghoApplication to sProgram
+        Move (CS_VerifyCredentials * CS_DefAuthVerPolicy) to sParams
+        Move (sParams * '"' + sProgram + '"') to sParams
+        Move (sParams * String("| clip"))    to sParams
+        
+        Get OpenOutput (sPath + CS_TempCertBatchFile) to iCh
+        If (iCh < 0) Begin
+            Procedure_Return
+        End
+        Writeln channel iCh ('"' + sPath + CS_SignProgram + '"' * sParams)
+        Send CloseOutput iCh
+        
+        // New ShellExecute based message that waits for the passed process to end.
+        Send RunProgramWait (sPath + CS_TempCertBatchFile) ""
+
+        Get OpenInput "clipboard:" to iCh
+        If (iCh < 0) Begin
+            Function_Return ""
+        End
+        Readln channel iCh sRetval
+        Readln channel iCh sRetval
+        Readln channel iCh sRetval
+        Readln channel iCh sRetval
+        Send CloseInput iCh
+
+        If (Lowercase(sRetval) contains "authenticode") Begin
+            Move "This program has been digitally signed and the certificate is valid." to sRetval
+        End
+        Else Begin
+            Move "" to sRetval
+        End
+        EraseFile (sPath + CS_TempCertBatchFile)
+        Function_Return sRetval
+    End_Function
+
+
+    // ---- the System Information lines ----------------------------------------------------------------
 
     //    This method will show the name Of the current directory in the system
     //    information box
@@ -1130,17 +1244,12 @@ Class SysinfoDisplay is a cTextEdit
         End
     End_Procedure
 
-    //    During activation we will remove the old information and add the newly
-    //    found systeminformation
-    { Visibility=Private }
-    Procedure Add_Focus Integer hoRoot
-        Forward Send Add_Focus hoRoot
+    // Every line of the System Information panel, in its order; an empty line is a blank line between
+    // groups.
+    Function SysInfoLines Returns String[]
+        String[] asNone
 
-        Send Delete_Data
-
-        Set Changed_State To False
-        Set Read_Only_State To True
-
+        Set pasLines to asNone
         Send Show_Registration
         Send Show_Drivers
         Send Show_ServicePack
@@ -1183,6 +1292,51 @@ Class SysinfoDisplay is a cTextEdit
         Send Show_Lock_Timeout
         Send Show_Date
         Send Show_Systemresources
+        Function_Return (pasLines(Self))
+    End_Function
+End_Class
+
+{ Visibility=Private }
+Class SysinfoDisplay is a cTextEdit
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set Size to 100 245
+        Set Location to 6 6
+        Set Border_Style to Border_None
+        Set Read_Only_State to True
+        Set pbWrap to True
+        Set peAnchors to anAll
+    End_Procedure
+
+    // One line, as a line.
+    Procedure AppendTextLn String sText
+        Send AppendText sText
+        Send AppendText (character(10))
+    End_Procedure
+
+    //    During activation we will remove the old information and add the newly
+    //    found systeminformation
+    { Visibility=Private }
+    Procedure Add_Focus Integer hoRoot
+        Handle hoInfo
+        String[] asLines
+        Integer i iMax
+
+        Forward Send Add_Focus hoRoot
+
+        Send Delete_Data
+
+        Set Changed_State To False
+        Set Read_Only_State To True
+
+        // The lines are cAboutInfo's (2026-10-06); this editor shows them, as it always has.
+        Get Create (RefClass(cAboutInfo)) to hoInfo
+        Get SysInfoLines of hoInfo to asLines
+        Send Destroy of hoInfo
+        Move (SizeOfArray(asLines) - 1) to iMax
+        For i from 0 to iMax
+            Send AppendTextLn asLines[i]
+        Loop
         Send Beginning_of_Data
 
         Set Icon to 'default.ico'
@@ -1377,6 +1531,10 @@ Class AboutDialog is a cAboutModalPanel
         
         Property Boolean pbShowRTFFile False
 
+        // What this dialog shows, as data - the version line, the compile date, the certificate.
+        Object oAboutInfo is a cAboutInfo
+        End_Object
+
         Object oSysInfoDialog is a SysInfoDialog
         End_Object
 
@@ -1478,12 +1636,9 @@ Class AboutDialog is a cAboutModalPanel
         Set LogoDF to "DF32.bmp"
     End_Procedure    
 
+    // The compile date and time, from cAboutInfo (2026-10-06).
     Function psCompileDateAndTime Returns String
-        String sProgramName sCompileTime
-        
-        Get GetApplicationFileName of ghoApplication to sProgramName
-        Get ProgramCompileDate sProgramName to sCompileTime
-        Function_Return sCompileTime
+        Function_Return (CompileDateAndTime(oAboutInfo(Self)))
     End_Function
 
     Procedure Page Integer iPageObject
@@ -1523,28 +1678,12 @@ Class AboutDialog is a cAboutModalPanel
 
     { MethodType=Property }
     Procedure Set Version String sVersion
-        Handle hoVersionInfo
-        Boolean bIncluded
-        Integer iMajor iMinor iRelease iBuild
         String sCertInfo sCompileDateAndTime
 
-        If (sVersion = "") Begin
-            // This automatically shows the program version of the program, if available.
-            // It will be displayed as the second item in the edit object.
-            If (ghoApplication <> 0) Begin
-                Get phoVersionInfo of ghoApplication to hoVersionInfo
-                If (hoVersionInfo <> 0) Begin
-                    Get pbIncluded of hoVersionInfo to bIncluded
-                    If (bIncluded) Begin
-                        Get piVersionMajor of hoVersionInfo to iMajor
-                        Get piVersionMinor of hoVersionInfo to iMinor
-                        Get piVersionRelease of hoVersionInfo to iRelease
-                        Get piVersionBuild of hoVersionInfo to iBuild
-                        Move (SFormat (C_$VERSION + ": %1.%2.%3.%4", iMajor, iMinor, iRelease, iBuild)) to sVersion
-                    End
-                End
-            End
-        End
+        // This automatically shows the program version of the program, if available.
+        // It will be displayed as the second item in the edit object.
+        If (sVersion = "") ;
+            Get VersionText of oAboutInfo to sVersion
 
         // Display the compiled date as the next row in the edit object, after the program version.
         Get psCompileDateAndTime to sCompileDateAndTime
@@ -1592,56 +1731,10 @@ Class AboutDialog is a cAboutModalPanel
         Function_Return sPath
     End_Function
 
-    // Returns an empty string if the current program is not digitally signed,
-    // or there is a problem with the certificate.
-    // Note: A copy of the Microsoft signtool.exe program must reside in the Programs folder,
-    //       else nothing is shown in the About object. (Size 355 KB)
+    // The certificate check, from cAboutInfo (2026-10-06): "" when the program is not signed, "-1" when
+    // signtool.exe is not in the Programs folder, otherwise the sentence that says it is signed.
     Function IsProgramDigitallySigned Returns String
-        Boolean bExists
-        String sPath sProgram sParams sRetval
-        Integer iCh
-
-        Move "" to sRetval
-        Get psProgramPath of (phoWorkspace(ghoApplication)) to sPath
-        Get AddFolderDelimiter sPath to sPath
-        File_Exist (sPath + CS_SignProgram) bExists
-        If (bExists = False) Begin
-            Function_Return "-1"
-        End
-
-        Get GetApplicationFileName of ghoApplication to sProgram
-        Move (CS_VerifyCredentials * CS_DefAuthVerPolicy) to sParams
-        Move (sParams * '"' + sProgram + '"') to sParams
-        Move (sParams * String("| clip"))    to sParams
-        
-        Get OpenOutput (sPath + CS_TempCertBatchFile) to iCh
-        If (iCh < 0) Begin
-            Procedure_Return
-        End
-        Writeln channel iCh ('"' + sPath + CS_SignProgram + '"' * sParams)
-        Send CloseOutput iCh
-        
-        // New ShellExecute based message that waits for the passed process to end.
-        Send RunProgramWait (sPath + CS_TempCertBatchFile) ""
-
-        Get OpenInput "clipboard:" to iCh
-        If (iCh < 0) Begin
-            Function_Return ""
-        End
-        Readln channel iCh sRetval
-        Readln channel iCh sRetval
-        Readln channel iCh sRetval
-        Readln channel iCh sRetval
-        Send CloseInput iCh
-
-        If (Lowercase(sRetval) contains "authenticode") Begin
-            Move "This program has been digitally signed and the certificate is valid." to sRetval
-        End
-        Else Begin
-            Move "" to sRetval
-        End
-        EraseFile (sPath + CS_TempCertBatchFile)
-        Function_Return sRetval
+        Function_Return (IsProgramDigitallySigned(oAboutInfo(Self)))
     End_Function
 
     Procedure Add_LineLn String sValue
