@@ -6,7 +6,7 @@
         "icon": "RDC-Mark.svg",
         "license": "MIT",
         "licenseFile": "LICENSE",
-        "version": "1.0.4"
+        "version": "1.0.5"
     },
     "paths": {
         "configFile": "Config.ws"
