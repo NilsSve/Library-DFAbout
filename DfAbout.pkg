@@ -1092,11 +1092,6 @@ Class cAboutInfo is a cObject
         Function_Return bOK
     End_Function
 
-    Function IsMertechDriver String sDriverID Returns Boolean
-        Boolean bOK
-        Function_Return bOK
-    End_Function
-
     //***
     //*** BW
     //*** Procedure: Show_Drivers
@@ -1107,7 +1102,7 @@ Class cAboutInfo is a cObject
         String sDriverID sVersion sClient sValue
         Integer iNumberOfDrivers iDriver iClient iUsersMax iSerialNo iNumServers iCount
         Handle hoCLIHandler hoBtrvHandler
-        Boolean bStudioLicense bIsDAWDriver bIsMertechDriver
+        Boolean bStudioLicense bIsDAWDriver
 
         Move False to bStudioLicense
 
@@ -1129,16 +1124,14 @@ Class cAboutInfo is a cObject
             Send AppendTextLn ""
         End
         For iDriver from 1 to iNumberOfDrivers
-            // For some weird reason it can happen that - when using Mertech drivers - that the driver index
-            // was increased in the CLI array, but it has no value. In that case a "Bad parameter..." error
-            // would be thrown, so we safeguard from that here.
+            // It can happen that a driver has its place in the list but no value. A "Bad parameter..."
+            // error would be thrown then, so we safeguard from that here.
             Send Ignore_Error of Error_Object_Id DFERR_BAD_PARAMETER
             Get_Attribute DF_DRIVER_NAME of iDriver to sDriverID
             Send Trap_Error of Error_Object_Id DFERR_BAD_PARAMETER
             Get IsDAWSQLDriver  sDriverID to bIsDAWDriver
-            Get IsMertechDriver sDriverID to bIsMertechDriver
 
-            If (sDriverID = DFBTRDRV_ID or bIsDAWDriver = True or bIsMertechDriver = True) Begin
+            If (sDriverID = DFBTRDRV_ID or bIsDAWDriver = True) Begin
 
                 // Pervasive/Btrieve database
                 If (sDriverID = DFBTRDRV_ID) Begin
@@ -1165,9 +1158,6 @@ Class cAboutInfo is a cObject
                             Get SQLClientVersion sDriverID iClient to sClient
                         End
                         Get CKRevision of hoCLIHandler to sVersion
-                    End
-
-                    If (bIsMertechDriver = True) Begin
                     End
 
                     // If the serialnumber is = 0, it means that the
