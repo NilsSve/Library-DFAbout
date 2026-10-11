@@ -24,7 +24,7 @@ thing you need when a user reports a problem.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-DFAbout.git/RDC-DFAbout-Library.sws#1.0.3
+https://github.com/NilsSve/Library-DFAbout.git/RDC-DFAbout-Library.sws#1.0.4
 ```
 
 Each release has a version tag (`1.0.2`, `1.0.3`, ...), listed under Tags on GitHub. Pin a tag, not a
