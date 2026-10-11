@@ -669,24 +669,24 @@ Class cCopyEditorContentButton is a Button
     End_Procedure
 End_Class
 
-/*  cAboutInfo - what the About dialog and the System Information panel SHOW, as data (2026-10-06).
-
-    Until then the dialogs gathered it themselves: the system information in a cTextEdit subclass
-    that wrote every line into its own editor, the version line and the certificate check in the
-    About panel. A program that wants to show the same facts another way - a web page, a report, a
-    log - could not get at them without those dialogs. This class gathers them and hands them over;
-    SysinfoDisplay and AboutDialog below ask it and show what they always showed.
-
-        Get Create (RefClass(cAboutInfo)) to hoInfo
-        Get VersionText             of hoInfo to sVersion     // "Version: 1.2.3.4", "" without version info
-        Get CompileDateAndTime      of hoInfo to sCompiled    // "" when the .exe does not say
-        Get IsProgramDigitallySigned of hoInfo to sSigned     // the sentence, "" unsigned, "-1" no signtool
-        Get SysInfoLines            of hoInfo to asLines      // the panel's lines, an empty one between groups
-        Send Destroy of hoInfo
-
-    The workspace object (EnumerateWorkspaceData) and the connection manager (EnumerateConnections)
-    append their own lines by sending AppendTextLn to the object they are handed - this one now, so
-    the message keeps its name. */
+//  cAboutInfo - what the About dialog and the System Information panel SHOW, as data (2026-10-06).
+//
+//  Until then the dialogs gathered it themselves: the system information in a cTextEdit subclass
+//  that wrote every line into its own editor, the version line and the certificate check in the
+//  About panel. A program that wants to show the same facts another way - a web page, a report, a
+//  log - could not get at them without those dialogs. This class gathers them and hands them over;
+//  SysinfoDisplay and AboutDialog below ask it and show what they always showed.
+//
+//      Get Create (RefClass(cAboutInfo)) to hoInfo
+//      Get VersionText             of hoInfo to sVersion     // "Version: 1.2.3.4", "" without version info
+//      Get CompileDateAndTime      of hoInfo to sCompiled    // "" when the .exe does not say
+//      Get IsProgramDigitallySigned of hoInfo to sSigned     // the sentence, "" unsigned, "-1" no signtool
+//      Get SysInfoLines            of hoInfo to asLines      // the panel's lines, an empty one between groups
+//      Send Destroy of hoInfo
+//
+//  The workspace object (EnumerateWorkspaceData) and the connection manager (EnumerateConnections)
+//  append their own lines by sending AppendTextLn to the object they are handed - this one now, so
+//  the message keeps its name.
 Class cAboutInfo is a cObject
 
     Procedure Construct_Object
@@ -1448,26 +1448,26 @@ Class cAboutEdit is an cRichEdit
 Define ShouldEmbeddAboutHelpFile for 0
 
 #IFDEF ShouldEmbeddAboutHelpFile
-    /* Dummy procedure to embed the About.rtf file into the program. Nothing calls it -
-       the resource is emitted because the procedure is COMPILED, and Page below reads it
-       back by name.
-
-       AN APPLICATION CAN SUPPLY ITS OWN. A resource name can only be bound once
-       (Include_Resource twice under one name is compile error 4301), so an application
-       that wants different About text - a dark copy to match a dark UI, say - cannot
-       simply add its own binding. It defines UseCustomAboutResource before Use
-       DfAbout.pkg and then binds res_AboutFile itself:
-
-           Define UseCustomAboutResource for 1
-           Use DfAbout.pkg
-           Class cAboutEditMine is a cAboutEdit
-               Procedure EmbeddAboutHelpFile
-                   Include_Resource ..\Help\MyAbout.rtf as res_AboutFile type DF_RESOURCE_TYPE_BINARY
-               End_Procedure
-           End_Class
-
-       The subclass never needs to be instantiated; compiling it is what binds the name.
-       Page reads whichever binding exists, so nothing else changes. */
+    // Dummy procedure to embed the About.rtf file into the program. Nothing calls it -
+    // the resource is emitted because the procedure is COMPILED, and Page below reads it
+    // back by name.
+    //
+    // AN APPLICATION CAN SUPPLY ITS OWN. A resource name can only be bound once
+    // (Include_Resource twice under one name is compile error 4301), so an application
+    // that wants different About text - a dark copy to match a dark UI, say - cannot
+    // simply add its own binding. It defines UseCustomAboutResource before Use
+    // DfAbout.pkg and then binds res_AboutFile itself:
+    //
+    //     Define UseCustomAboutResource for 1
+    //     Use DfAbout.pkg
+    //     Class cAboutEditMine is a cAboutEdit
+    //         Procedure EmbeddAboutHelpFile
+    //             Include_Resource ..\Help\MyAbout.rtf as res_AboutFile type DF_RESOURCE_TYPE_BINARY
+    //         End_Procedure
+    //     End_Class
+    //
+    // The subclass never needs to be instantiated; compiling it is what binds the name.
+    // Page reads whichever binding exists, so nothing else changes.
 #IFNDEF UseCustomAboutResource
     Procedure EmbeddAboutHelpFile
         Include_Resource ..\Help\About.rtf as res_AboutFile type DF_RESOURCE_TYPE_BINARY
