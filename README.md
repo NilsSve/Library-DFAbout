@@ -35,8 +35,8 @@ uses DUF, list DFAbout before it.
 From 1.0.2 on, the package file has no DataFlex version in its name. Release 1.0.1 still has the old
 name, `RDC-DFAbout-Library-26.0.sws`.
 
-**DataFlex 20.1, 23, 24 and 25** — add `DFAbout20.1.sws`, `DFAbout23.0.sws`, `DFAbout24.0.sws` or
-`DFAbout25.0.sws`, the one of your version, as a library in your workspace.
+**DataFlex 19.1, 20.1, 23, 24 and 25** — add `DFAbout19.1.sws`, `DFAbout20.1.sws`, `DFAbout23.0.sws`,
+`DFAbout24.0.sws` or `DFAbout25.0.sws`, the one of your version, as a library in your workspace.
 
 ## Using it
 
@@ -79,7 +79,7 @@ signing section is simply absent.
 
 ## Requirements
 
-DataFlex 20.1 to 26, Windows desktop. DFAbout has no dependencies on other libraries.
+DataFlex 19.1 to 26, Windows desktop. DFAbout has no dependencies on other libraries.
 
 ## Licence
 
