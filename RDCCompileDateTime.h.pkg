@@ -70,6 +70,8 @@ External_Function CompileTimeFileGetFileTime "GetFileTime" Kernel32.dll ;
     Pointer lpLastWritetime ;       // Pointer to a FILETIME structure containing the file last write time
     Returns Integer
  
+// It takes a WString, which is DataFlex 20.
+#IF (!@ > 191)
 External_Function CompileTimeFileCreateFileW "CreateFileW" kernel32.dll ;
     WString lpFile ;      // filename
     DWord dwDesAccess ;   // access mode
@@ -79,6 +81,7 @@ External_Function CompileTimeFileCreateFileW "CreateFileW" kernel32.dll ;
     DWord dwFlags ;       // file attributes
     Handle hTempFile ;   // handle to template fil
     Returns Integer      //Returns handle that can be used to access the object
+#ENDIF
 
 External_Function CompileTimeFileCloseHandle "CloseHandle" kernel32.dll ;
     Handle hObject ;        // handle to object

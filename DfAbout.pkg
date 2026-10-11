@@ -542,6 +542,9 @@ Define CS_DefAuthVerPolicy   for "/pa"
     External_Function GetRemoveMenu "RemoveMenu" user32.dll Handle hWnd UInteger uPosition UInteger uFlags Returns Handle
 #ENDIF
 
+// The wide function and its wrapper are for DataFlex 20 and later. Before 20 there is no wide string, and the
+// #IFNDEF below declares the ANSI function under the wrapper's name.
+#IF (!@ > 191)
 // Do not call directly, use the wrapper function instead
 External_Function WNetGetUserW "WNetGetUserW" MPR.DLL ;
     Pointer lpName ;
@@ -569,6 +572,7 @@ External_Function WNetGetUserW "WNetGetUserW" MPR.DLL ;
 
         Function_Return dwResult
     End_Function
+#ENDIF
 
 #IFNDEF get_WNetGetUser
     External_Function WNetGetUser "WNetGetUserA" MPR.DLL Pointer lpName Pointer lpUser_Name Pointer lpLength Returns DWord
@@ -589,13 +593,24 @@ Function ComputerName Desktop Returns String
 End_Function
 
 Function Network_User_Name Desktop Returns String
+#IF (!@ < 200)
+    String wName
+#ELSE
     WString wName
+#ENDIF
     Integer iRetval iLength
 
     Move 0 to iLength
+#IF (!@ < 200)
+    // Before DataFlex 20: the ANSI function and a String, as DataFlex's own About package has it there.
+    Move (WNetGetUser (0, 0, AddressOf (iLength))) to iRetval
+    Move (ZeroString(iLength)) to wName
+    Move (WNetGetUser (0, AddressOf (wName), AddressOf (iLength))) to iRetval
+#ELSE
     Move (WNetGetUserW (0, 0, AddressOf (iLength))) to iRetval
     Move (ZeroString(iLength)) to wName
     Move (WNetGetUserW (0, AddressOf (wName), AddressOf (iLength))) to iRetval
+#ENDIF
 
     If (iRetval = NO_ERROR) Begin
         Function_Return (CString (wName))

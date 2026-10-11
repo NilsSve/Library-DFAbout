@@ -3,6 +3,90 @@
 //  See: Function ProgramCompileDate at end of package.
 Use RDCCompileDateTime.h.pkg
 
+// Before DataFlex 20 there is no WString, and DataFlex declares the ANSI file search only (cWorkspace.pkg). The
+// class is shorter there: the file's creation time through that search, and the DateTime put together from the
+// parts of the system time, with no text in between.
+#IF (!@ < 200)
+Class cFileCompileDateAndTime is a cObject
+
+    // Pass the sFileName with full path
+    // Returns the date & time when it was created.
+    Function CreationFileCompilationTime String sFileName Returns DateTime
+        tWIN32_FIND_DATA Win32FindData
+        DateTime dtCreated
+        Handle hFile
+        Integer iErrorNumber iVoid
+
+        Move (winFindFirstFile(ToANSI(sFileName), AddressOf(Win32FindData))) to hFile
+        If (hFile = INVALID_HANDLE_VALUE) Begin
+            Move (GetLastError()) to iErrorNumber
+            If (iErrorNumber <> 0) Begin
+                Send ShowCompileTimeFileError iErrorNumber sFileName
+            End
+            Function_Return dtCreated
+        End
+
+        Get ConvertDateTimeToSystemDateTime Win32FindData.ftCreationTime.dwLowDateTime Win32FindData.ftCreationTime.dwHighDateTime to dtCreated
+        Move (winFindClose(hFile)) to iVoid
+        Function_Return dtCreated
+    End_Function
+
+    Function ConvertDateTimeToSystemDateTime UInteger dwLowDateTime UInteger dwHighDateTime Returns DateTime
+        Integer iSuccess
+        tWinSystemTime SystemTime
+        tWinFileTime FileTime
+        DateTime dtResult
+
+        Move dwLowDateTime  to FileTime.dwLowDateTime
+        Move dwHighDateTime to FileTime.dwHighDateTime
+
+        Move (CompileTimeFileFileTimeToSystemTime (AddressOf (FileTime), AddressOf (SystemTime))) to iSuccess
+        If (iSuccess <> 0) Begin
+            Get SystemTimeToDateTime SystemTime to dtResult
+        End
+
+        Function_Return dtResult
+    End_Function
+
+    // We don't care about milli seconds.
+    Function SystemTimeToDateTime tWinSystemTime SystemTime Returns DateTime
+        DateTime dtResult
+
+        Move (CurrentDateTime()) to dtResult
+        Move (DateSetDay         (dtResult, 1))                  to dtResult
+        Move (DateSetYear        (dtResult, SystemTime.wYear))   to dtResult
+        Move (DateSetMonth       (dtResult, SystemTime.wMonth))  to dtResult
+        Move (DateSetDay         (dtResult, SystemTime.wDay))    to dtResult
+        Move (DateSetHour        (dtResult, SystemTime.wHour))   to dtResult
+        Move (DateSetMinute      (dtResult, SystemTime.wMinute)) to dtResult
+        Move (DateSetSecond      (dtResult, SystemTime.wSecond)) to dtResult
+        Move (DateSetMillisecond (dtResult, 0))                  to dtResult
+
+        Function_Return dtResult
+    End_Function
+
+    Procedure ShowCompileTimeFileError Integer iErrorNumber String sAppendErrorText
+        Pointer lpOut
+        Integer iRetChars iRetVal
+        String sMessage
+
+        Move 0 to lpOut
+        Move (FormatMessage ((FORMAT_MESSAGE_FROM_SYSTEM ior FORMAT_MESSAGE_IGNORE_INSERTS ior FORMAT_MESSAGE_ALLOCATE_BUFFER), 0, iErrorNumber, 0, AddressOf (lpOut), 0, 0)) to iRetChars
+        If (iRetChars > 0) Begin
+            Move (Repeat (Character (0), iRetChars)) to sMessage
+            Move (CopyMemory (AddressOf (sMessage), lpOut, iRetChars)) to iRetVal
+            Move (Free (lpOut)) to iRetVal
+            Move (ToOEM (sMessage)) to sMessage
+            Move (Trim (sAppendErrorText)) to sAppendErrorText
+            If (sAppendErrorText <> "") Begin
+                Move (sMessage + "\n" + sAppendErrorText) to sMessage
+            End
+            Send Info_Box sMessage
+        End
+    End_Procedure
+
+End_Class
+#ELSE
 Class cFileCompileDateAndTime is a cObject
     
     Procedure Construct_Object
@@ -142,6 +226,7 @@ Class cFileCompileDateAndTime is a cObject
     End_Procedure
 
 End_Class
+#ENDIF
 
 // *** Main Interface Message ***
 Function ProgramCompileDate Global String sFileName Returns DateTime
