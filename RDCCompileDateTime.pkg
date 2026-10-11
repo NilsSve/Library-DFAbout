@@ -1,4 +1,4 @@
-﻿//  Package with general purpose function "ProgramCompileDate" that returns
+//  Package with general purpose function "ProgramCompileDate" that returns
 //  the running program's date & time.
 //  See: Function ProgramCompileDate at end of package.
 Use RDCCompileDateTime.h.pkg
