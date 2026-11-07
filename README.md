@@ -23,7 +23,7 @@ thing you need when a user reports a problem.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-DFAbout.git/RDC-DFAbout-Library.sws#1.0.6
+https://github.com/NilsSve/Library-DFAbout.git/RDC-DFAbout-Library.sws#1.0.7
 ```
 
 Each release has a version tag (`1.0.2`, `1.0.3`, ...), listed under Tags on GitHub. Pin a tag, not a
@@ -33,6 +33,9 @@ uses DUF, list DFAbout before it.
 
 From 1.0.2 on, the package file has no DataFlex version in its name. Release 1.0.1 still has the old
 name, `RDC-DFAbout-Library-26.0.sws`.
+
+From 1.0.7 on, the dialog does not check the program's digital signature: `IsProgramDigitallySigned` and the global
+`RunProgramWait` are gone, and a `signtool.exe` in the Programs folder is no longer used.
 
 **DataFlex 19.1, 20.1, 23, 24 and 25** — add `DFAbout19.1.sws`, `DFAbout20.1.sws`, `DFAbout23.0.sws`,
 `DFAbout24.0.sws` or `DFAbout25.0.sws`, the one of your version, as a library in your workspace.
