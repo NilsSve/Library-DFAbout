@@ -28,32 +28,6 @@ Use RDCCompileDateTime.pkg
     Use GlobalFunctionsProcedures.pkg
     Use seq_chnl.pkg
 
-    // A variant of the ShellExecute Win API, but it waits until the process that is started
-    // (the passed program), has finished
-    // The DOS box does also _not_ flash briefly.
-    Procedure RunProgramWait Global String sProgram String sParameter
-//        Handle hProcess
-//        Integer iVoid
-//        AboutSHELLEXECUTEINFO sInfo
-//    
-//        Move (SizeOfType(AboutSHELLEXECUTEINFO)) to sInfo.cbSize
-//    
-//        Move SEE_MASK_NOCLOSEPROCESS to sInfo.fMask
-//        Move SW_SHOW                 to sInfo.nShow
-//    
-//        Move (AddressOf(sProgram))   to sInfo.lpFile
-//        Move (AddressOf(sParameter)) to sInfo.lpParameters
-//        // This will "hide" the DOS box from showing (no flasing box):
-//        Move 0                       to sInfo.nShow
-//    
-//        Move (AboutShellExecuteEx(AddressOf(sInfo))) to iVoid
-//        Move sInfo.hProcess to hProcess
-//        If (hProcess) Begin
-//            Move (AboutWaitForSingleObject(hProcess, -1)) to iVoid
-//            Move (AboutCloseHandle(hProcess)) to iVoid
-//        End
-    End_Procedure
-
     Function OpenOutput Global String sFileName Returns Integer
         Integer iCh
     
@@ -531,12 +505,6 @@ Register_Function pbEnterKeyAsTabKey Returns Boolean
     Define SC_PREVWINDOW for |CI$F050
 #ENDIF
 
-Define CS_SignProgram        for "signtool.exe"
-Define CS_TempCertBatchFile  for "certinfo.bat"
-Define CS_VerifyCredentials  for "verify"
-Define CS_VerifyFileParam    for "/a"
-Define CS_DefAuthVerPolicy   for "/pa"
-
 // *** External Function calls: ***
 //
 #IFNDEF get_GetSystemMenu
@@ -692,7 +660,7 @@ End_Class
 //  cAboutInfo - what the About dialog and the System Information panel SHOW, as data (2026-10-06).
 //
 //  Until then the dialogs gathered it themselves: the system information in a cTextEdit subclass
-//  that wrote every line into its own editor, the version line and the certificate check in the
+//  that wrote every line into its own editor, the version line in the
 //  About panel. A program that wants to show the same facts another way - a web page, a report, a
 //  log - could not get at them without those dialogs. This class gathers them and hands them over;
 //  SysinfoDisplay and AboutDialog below ask it and show what they always showed.
@@ -700,7 +668,6 @@ End_Class
 //      Get Create (RefClass(cAboutInfo)) to hoInfo
 //      Get VersionText             of hoInfo to sVersion     // "Version: 1.2.3.4", "" without version info
 //      Get CompileDateAndTime      of hoInfo to sCompiled    // "" when the .exe does not say
-//      Get IsProgramDigitallySigned of hoInfo to sSigned     // the sentence, "" unsigned, "-1" no signtool
 //      Get SysInfoLines            of hoInfo to asLines      // the panel's lines, an empty one between groups
 //      Send Destroy of hoInfo
 //
@@ -765,68 +732,6 @@ Class cAboutInfo is a cObject
         Get GetApplicationFileName of ghoApplication to sProgramName
         Get ProgramCompileDate sProgramName to sCompileTime
         Function_Return sCompileTime
-    End_Function
-
-    Function AddFolderDelimiter String sPath Returns String
-        String sDirSep
-        Move (SysConf(SYSCONF_DIR_SEPARATOR)) to sDirSep
-        Move (Trim(sPath)) to sPath
-        If (Right(sPath, 1) <> sDirSep) Begin
-            Move (sPath + sDirSep) to sPath
-        End
-        Function_Return sPath
-    End_Function
-
-    // Returns an empty string if the current program is not digitally signed,
-    // or there is a problem with the certificate.
-    // Note: A copy of the Microsoft signtool.exe program must reside in the Programs folder,
-    //       else nothing is shown in the About object. (Size 355 KB)
-    Function IsProgramDigitallySigned Returns String
-        Boolean bExists
-        String sPath sProgram sParams sRetval
-        Integer iCh
-
-        Move "" to sRetval
-        Get psProgramPath of (phoWorkspace(ghoApplication)) to sPath
-        Get AddFolderDelimiter sPath to sPath
-        File_Exist (sPath + CS_SignProgram) bExists
-        If (bExists = False) Begin
-            Function_Return "-1"
-        End
-
-        Get GetApplicationFileName of ghoApplication to sProgram
-        Move (CS_VerifyCredentials * CS_DefAuthVerPolicy) to sParams
-        Move (sParams * '"' + sProgram + '"') to sParams
-        Move (sParams * String("| clip"))    to sParams
-        
-        Get OpenOutput (sPath + CS_TempCertBatchFile) to iCh
-        If (iCh < 0) Begin
-            Procedure_Return
-        End
-        Writeln channel iCh ('"' + sPath + CS_SignProgram + '"' * sParams)
-        Send CloseOutput iCh
-        
-        // New ShellExecute based message that waits for the passed process to end.
-        Send RunProgramWait (sPath + CS_TempCertBatchFile) ""
-
-        Get OpenInput "clipboard:" to iCh
-        If (iCh < 0) Begin
-            Function_Return ""
-        End
-        Readln channel iCh sRetval
-        Readln channel iCh sRetval
-        Readln channel iCh sRetval
-        Readln channel iCh sRetval
-        Send CloseInput iCh
-
-        If (Lowercase(sRetval) contains "authenticode") Begin
-            Move "This program has been digitally signed and the certificate is valid." to sRetval
-        End
-        Else Begin
-            Move "" to sRetval
-        End
-        EraseFile (sPath + CS_TempCertBatchFile)
-        Function_Return sRetval
     End_Function
 
 
@@ -1541,7 +1446,7 @@ Class AboutDialog is a cAboutModalPanel
         
         Property Boolean pbShowRTFFile False
 
-        // What this dialog shows, as data - the version line, the compile date, the certificate.
+        // What this dialog shows, as data - the version line and the compile date.
         Object oAboutInfo is a cAboutInfo
         End_Object
 
@@ -1688,7 +1593,7 @@ Class AboutDialog is a cAboutModalPanel
 
     { MethodType=Property }
     Procedure Set Version String sVersion
-        String sCertInfo sCompileDateAndTime
+        String sCompileDateAndTime
 
         // This automatically shows the program version of the program, if available.
         // It will be displayed as the second item in the edit object.
@@ -1699,16 +1604,6 @@ Class AboutDialog is a cAboutModalPanel
         Get psCompileDateAndTime to sCompileDateAndTime
         If (sCompileDateAndTime <> "") Begin
             Send Add_Lineln (sVersion + (Character(13)) + C_$Compile_Date * String(sCompileDateAndTime))
-        End
-
-        Get IsProgramDigitallySigned to sCertInfo
-        If (sCertInfo <> "-1") Begin
-            If (sCertInfo <> "") Begin
-                Send Add_LineLn sCertInfo
-            End
-            Else Begin
-//                Send Add_LineLn "The program has NOT been digitally signed, or there is a problem with the digical certificate."
-            End
         End
     End_Procedure
 
@@ -1729,22 +1624,6 @@ Class AboutDialog is a cAboutModalPanel
             End
         Loop
         Function_Return bIsDate
-    End_Function
-
-    Function AddFolderDelimiter String sPath Returns String
-        String sDirSep
-        Move (SysConf(SYSCONF_DIR_SEPARATOR)) to sDirSep
-        Move (Trim(sPath)) to sPath
-        If (Right(sPath, 1) <> sDirSep) Begin
-            Move (sPath + sDirSep) to sPath
-        End
-        Function_Return sPath
-    End_Function
-
-    // The certificate check, from cAboutInfo (2026-10-06): "" when the program is not signed, "-1" when
-    // signtool.exe is not in the Programs folder, otherwise the sentence that says it is signed.
-    Function IsProgramDigitallySigned Returns String
-        Function_Return (IsProgramDigitallySigned(oAboutInfo(Self)))
     End_Function
 
     Procedure Add_LineLn String sValue

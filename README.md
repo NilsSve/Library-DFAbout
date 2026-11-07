@@ -15,7 +15,6 @@ thing you need when a user reports a problem.
   of you rather than a constant somebody forgot to update
 - **A system information panel** — computer name, network user, installed and available memory,
   and the SQL client version when one is in use
-- **Code-signing details** for the running executable, when a signed build is in use
 - **A copy button**, so a user can paste the whole report into an email or a support ticket
 - Your own logo, or the supplied *Powered by DataFlex* image
 
@@ -70,12 +69,6 @@ The build timestamp is also available without the dialog:
 DateTime dtBuilt
 Move (ProgramCompileDate(psProgramName(ghoApplication))) to dtBuilt
 ```
-
-### Code-signing details
-
-To show certificate information for the running program, place Microsoft's `signtool.exe` in the
-application's `Programs` folder. Without it the rest of the dialog works normally and the
-signing section is simply absent.
 
 ## Requirements
 
